@@ -66,7 +66,7 @@ async function main() {
   }
 
   const exchanges = await prisma.exchange.findMany();
-  const getExchange = (slug: string) => exchanges.find(e => e.slug === slug)!;
+  const getExchange = (slug: string) => exchanges.find((e: any) => e.slug === slug)!;
 
   // 2. Seed Networks
   const networksData = [
@@ -88,7 +88,7 @@ async function main() {
   }
 
   const networks = await prisma.network.findMany();
-  const getNetwork = (slug: string) => networks.find(n => n.slug === slug)!;
+  const getNetwork = (slug: string) => networks.find((n: any) => n.slug === slug)!;
 
   // 3. Seed Standard Fee Tiers (Realistically mapped for all 50 exchanges)
   for (const ex of exchanges) {
