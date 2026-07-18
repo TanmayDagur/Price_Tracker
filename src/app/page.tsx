@@ -1,66 +1,51 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { getTradingPairs, getExchanges } from '../lib/data/exchanges';
+import { getLivePrices } from '../lib/data/prices';
+import { getFeeTiers, getWithdrawalFees } from '../lib/data/fees';
+import AutoRefresh from '../components/AutoRefresh';
+import ArbitrageSimulator from '../components/ArbitrageSimulator';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  let pairs: any[] = [];
+  let livePrices: any[] = [];
+  let feeTiers: any[] = [];
+  let withdrawalFees: any[] = [];
+  let exchanges: any[] = [];
+
+  try {
+    pairs = await getTradingPairs();
+    livePrices = await getLivePrices();
+    feeTiers = await getFeeTiers();
+    withdrawalFees = await getWithdrawalFees();
+    exchanges = await getExchanges();
+  } catch (error) {
+    console.error('Error fetching database records for simulator:', error);
+  }
+  
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="section">
+      <AutoRefresh interval={5000} />
+      <div className="hero">
+        <h1 className="hero__title">
+          <span className="text-gradient">True Net Profit</span> Arbitrage
+        </h1>
+        <p className="hero__subtitle">
+          We factor in live spreads, maker/taker fees, and withdrawal costs to show you the real margin across 5 major exchanges.
+        </p>
+        <div className="hero__actions">
+          <a href="/arbitrage" className="btn btn--primary">View Arbitrage Opportunities</a>
+          <a href="/cheapest-withdrawal" className="btn btn--ghost">Compare Withdrawal Fees</a>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      <ArbitrageSimulator
+        pairs={pairs}
+        livePrices={livePrices}
+        feeTiers={feeTiers}
+        withdrawalFees={withdrawalFees}
+        exchanges={exchanges}
+      />
     </div>
   );
 }

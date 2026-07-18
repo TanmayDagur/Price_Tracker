@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Exchange {
+  id                      String   @id @default(uuid())
+  name                    String   @unique
+  slug                    String   @unique
+  url                     String?
+  nativeToken             String?
+  nativeDiscountAvailable Boolean  @default(false)
+  discountPercentage      Float    @default(0)
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  feeTiers         FeeTier[]
+  withdrawalFees   WithdrawalFee[]
+  livePrices       LivePrice[]
+  arbitrageBuy     ArbitrageSnapshot[] @relation("BuyExchange")
+  arbitrageSell    ArbitrageSnapshot[] @relation("SellExchange")
+}
+
+model TradingPair {
+  id         String   @id @default(uuid())
+  symbol     String   @unique // e.g., "BTC-USDT"
+  baseAsset  String   // e.g., "BTC"
+  quoteAsset String   // e.g., "USDT"
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  livePrices        LivePrice[]
+  arbitrageSnaps    ArbitrageSnapshot[]
+}
+
+model FeeTier {
+  id         String   @id @default(uuid())
+  exchangeId String
+  tierName   String
+  makerFee   Float    // percentage, e.g., 0.1 for 0.1%
+  takerFee   Float    // percentage, e.g., 0.1 for 0.1%
+  minVolume  Float    // 30-day trading volume required
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  exchange Exchange @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeId, tierName])
+}
+
+model Network {
+  id        String   @id @default(uuid())
+  name      String   // e.g., "Ethereum (ERC20)"
+  slug      String   @unique // e.g., "erc20"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  withdrawalFees WithdrawalFee[]
+}
+
+model WithdrawalFee {
+  id            String   @id @default(uuid())
+  exchangeId    String
+  networkId     String
+  asset         String   // e.g., "USDT"
+  fee           Float    // absolute fee amount
+  minWithdrawal Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  exchange Exchange @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+  network  Network  @relation(fields: [networkId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeId, networkId, asset])
+}
+
+model LivePrice {
+  id         String   @id @default(uuid())
+  exchangeId String
+  pairId     String
+  bidPrice   Float
+  askPrice   Float
+  bidQty     Float
+  askQty     Float
+  timestamp  DateTime @default(now())
+
+  exchange Exchange    @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+  pair     TradingPair @relation(fields: [pairId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeId, pairId])
+}
+
+model ArbitrageSnapshot {
+  id             String   @id @default(uuid())
+  pairId         String
+  buyExchangeId  String
+  sellExchangeId String
+  grossSpread    Float    // percentage
+  netProfit      Float    // percentage after fees
+  timestamp      DateTime @default(now())
+
+  pair         TradingPair @relation(fields: [pairId], references: [id], onDelete: Cascade)
+  buyExchange  Exchange    @relation("BuyExchange", fields: [buyExchangeId], references: [id], onDelete: Cascade)
+  sellExchange Exchange    @relation("SellExchange", fields: [sellExchangeId], references: [id], onDelete: Cascade)
+}
+
+model StakingYield {
+  id        String   @id @default(uuid())
+  asset     String   @unique // e.g., "USDT", "ETH"
+  apy       Float    // percentage
+  project   String   // e.g., "DeFiLlama"
+  timestamp DateTime @default(now())
+}
