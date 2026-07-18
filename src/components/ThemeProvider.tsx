@@ -3,5 +3,5 @@
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return <NextThemesProvider defaultTheme="dark">{children}</NextThemesProvider>;
+  return <NextThemesProvider attribute="data-theme" defaultTheme="dark">{children}</NextThemesProvider>;
 }

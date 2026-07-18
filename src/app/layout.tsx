@@ -5,9 +5,26 @@ import ThemeToggle from '../components/ThemeToggle';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-primary' });
 
-export const metadata = {
-  title: 'Crypto Net-Cost Arbitrage & Fee Calculator',
+export const metadata: import('next').Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://price-tracker-tb8j.vercel.app'),
+  title: {
+    default: 'Crypto Net-Cost Arbitrage & Fee Calculator',
+    template: '%s | Net-Cost Arbitrage'
+  },
   description: 'Calculate True Net Profit margins for crypto arbitrage by factoring in live prices, maker/taker fees, and withdrawal gas fees across major exchanges.',
+  openGraph: {
+    title: 'Crypto Net-Cost Arbitrage & Fee Calculator',
+    description: 'Calculate True Net Profit margins for crypto arbitrage by factoring in live prices, maker/taker fees, and withdrawal gas fees across major exchanges.',
+    url: '/',
+    siteName: 'Net-Cost Arbitrage',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Crypto Net-Cost Arbitrage & Fee Calculator',
+    description: 'Calculate True Net Profit margins for crypto arbitrage by factoring in live prices, maker/taker fees, and withdrawal gas fees.',
+  },
 };
 
 export default function RootLayout({
@@ -17,6 +34,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Net-Cost Arbitrage",
+              "url": process.env.NEXT_PUBLIC_APP_URL || 'https://price-tracker-tb8j.vercel.app',
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": `${process.env.NEXT_PUBLIC_APP_URL || 'https://price-tracker-tb8j.vercel.app'}/search?q={search_term_string}`,
+                "query-input": "required name=search_term_string"
+              }
+            })
+          }}
+        />
+      </head>
       <body>
         <ThemeProvider>
           <header className="header">

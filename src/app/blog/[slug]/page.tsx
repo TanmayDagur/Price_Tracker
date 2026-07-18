@@ -26,9 +26,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const url = `${process.env.NEXT_PUBLIC_APP_URL || 'https://price-tracker-tb8j.vercel.app'}/blog/${slug}`;
+
   return {
     title: `${post.metadata.title} | Net-Cost Arbitrage Blog`,
     description: post.metadata.description,
+    openGraph: {
+      title: post.metadata.title,
+      description: post.metadata.description,
+      type: 'article',
+      url: url,
+      authors: [post.metadata.author],
+      publishedTime: new Date(post.metadata.date).toISOString(),
+      tags: post.metadata.tags,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.metadata.title,
+      description: post.metadata.description,
+    },
+    alternates: {
+      canonical: url,
+    },
   };
 }
 
@@ -42,6 +61,52 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div className="section animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "Article",
+              "headline": post.metadata.title,
+              "description": post.metadata.description,
+              "author": {
+                "@type": "Person",
+                "name": post.metadata.author
+              },
+              "datePublished": new Date(post.metadata.date).toISOString(),
+              "publisher": {
+                "@type": "Organization",
+                "name": "Net-Cost Arbitrage"
+              }
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": `${process.env.NEXT_PUBLIC_APP_URL || 'https://price-tracker-tb8j.vercel.app'}/`
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Blog",
+                  "item": `${process.env.NEXT_PUBLIC_APP_URL || 'https://price-tracker-tb8j.vercel.app'}/blog`
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": post.metadata.title,
+                  "item": `${process.env.NEXT_PUBLIC_APP_URL || 'https://price-tracker-tb8j.vercel.app'}/blog/${slug}`
+                }
+              ]
+            }
+          ])
+        }}
+      />
       <div className="breadcrumbs">
         <a href="/" className="breadcrumbs__link">Home</a>
         <span className="breadcrumbs__separator">/</span>
@@ -63,7 +128,7 @@ export default async function BlogPostPage({ params }: Props) {
           </h1>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)', flexWrap: 'wrap', gap: '8px' }}>
             <span>By <strong style={{ color: 'var(--text-primary)' }}>{post.metadata.author}</strong></span>
-            <span>Published on {new Date(post.metadata.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} &bull; {post.metadata.readTime}</span>
+            <span>Published on {new Date(post.metadata.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} &bull; {post.metadata.readTime}</span>
           </div>
         </header>
 

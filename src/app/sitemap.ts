@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getTradingPairs, getExchanges } from '@/lib/data/exchanges';
+import { getAllPosts } from '@/lib/markdown';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -37,13 +38,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
 
-    const coins = ['btc', 'eth', 'usdt', 'usdc', 'sol'];
+    const coins = ['btc', 'eth', 'usdt', 'bnb', 'sol', 'usdc', 'xrp', 'ada', 'doge', 'trx'];
     coins.forEach((coin) => {
       routes.push({
         url: `${APP_URL}/cheapest-withdrawal/${coin}`,
         lastModified: new Date(),
         changeFrequency: 'daily',
         priority: 0.8,
+      });
+    });
+
+    // Inject blog posts
+    const posts = getAllPosts();
+    posts.forEach((post) => {
+      routes.push({
+        url: `${APP_URL}/blog/${post.slug}`,
+        lastModified: new Date(post.date),
+        changeFrequency: 'weekly',
+        priority: 0.9,
       });
     });
   } catch (e) {
