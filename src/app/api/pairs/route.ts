@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     // Populate standard default withdrawal fees for the new coin across all exchanges
     const exchanges = await prisma.exchange.findMany();
     const networks = await prisma.network.findMany();
-    const bscNet = networks.find(n => n.slug === 'bsc') || networks[0];
+    const bscNet = networks.find((n: any) => n.slug === 'bsc') || networks[0];
 
     if (exchanges.length > 0 && bscNet) {
       const asset = baseAsset.toUpperCase();
