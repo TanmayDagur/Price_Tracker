@@ -15,6 +15,10 @@ export async function runArbitrageScanner() {
     const prices = await getLivePrices(pair.id);
     if (prices.length < 2) continue; // Need at least 2 exchanges to compare
 
+    let bestResult: any = null;
+    let bestBuyEx: any = null;
+    let bestSellEx: any = null;
+
     for (const buyEx of prices) {
       for (const sellEx of prices) {
         if (buyEx.exchangeId === sellEx.exchangeId) continue;
@@ -35,17 +39,23 @@ export async function runArbitrageScanner() {
           isWithdrawalInBase: true,
         });
 
-        if (result.grossSpread > 0.01) { // Save any spread > 0.01% so the UI has data to show
-          await saveArbitrageSnapshot({
-            pairId: pair.id,
-            buyExchangeId: buyEx.exchangeId,
-            sellExchangeId: sellEx.exchangeId,
-            grossSpread: result.grossSpread,
-            netProfit: result.netProfitPct,
-          });
-          console.log(`Saved snapshot: Spread ${result.grossSpread.toFixed(2)}%, Net ${result.netProfitPct.toFixed(2)}% on ${pair.symbol} (${buyEx.exchange.name} -> ${sellEx.exchange.name})`);
+        if (!bestResult || result.netProfitPct > bestResult.netProfitPct) {
+          bestResult = result;
+          bestBuyEx = buyEx;
+          bestSellEx = sellEx;
         }
       }
+    }
+
+    if (bestResult) {
+      await saveArbitrageSnapshot({
+        pairId: pair.id,
+        buyExchangeId: bestBuyEx.exchangeId,
+        sellExchangeId: bestSellEx.exchangeId,
+        grossSpread: bestResult.grossSpread,
+        netProfit: bestResult.netProfitPct,
+      });
+      console.log(`Saved snapshot: Spread ${bestResult.grossSpread.toFixed(2)}%, Net ${bestResult.netProfitPct.toFixed(2)}% on ${pair.symbol} (${bestBuyEx.exchange.name} -> ${bestSellEx.exchange.name})`);
     }
   }
 }

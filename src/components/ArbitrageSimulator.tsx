@@ -75,6 +75,19 @@ export default function ArbitrageSimulator({
   const [hideBelowMin, setHideBelowMin] = useState<boolean>(false);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
+  // Pagination / Lazy Loading state
+  const [visibleCount, setVisibleCount] = useState<number>(20);
+  const observer = React.useRef<IntersectionObserver | null>(null);
+  const lastElementRef = React.useCallback((node: HTMLDivElement | null) => {
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        setVisibleCount((prev) => prev + 20);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, []);
+
   // Exchange discount toggles
   const [useNativeDiscounts, setUseNativeDiscounts] = useState<Record<string, boolean>>({});
 
@@ -275,6 +288,10 @@ export default function ArbitrageSimulator({
 
     return filtered.sort((a, b) => b.netProfitPct - a.netProfitPct);
   }, [allPairs, allPrices, feeTiers, withdrawalFees, capital, selectedPair, hideLosses, hideBelowMin, useNativeDiscounts, exchanges]);
+
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [opportunities]);
 
   const handleCapitalSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCapitalInput(e.target.value);
@@ -574,8 +591,9 @@ export default function ArbitrageSimulator({
       {/* Opportunities List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
         {opportunities.length > 0 ? (
-          opportunities.map((op) => {
-            const isExpanded = expandedCard === op.id;
+          <>
+            {opportunities.slice(0, visibleCount).map((op) => {
+              const isExpanded = expandedCard === op.id;
             const isProfit = op.netProfitUsdt > 0;
             const pctColor = isProfit ? 'var(--color-profit)' : 'var(--color-loss)';
 
@@ -786,7 +804,14 @@ export default function ArbitrageSimulator({
                 )}
               </div>
             );
-          })
+            })}
+            {visibleCount < opportunities.length && (
+              <div ref={lastElementRef} style={{ padding: 'var(--space-md)', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <span className="spinner" style={{ display: 'inline-block', width: '16px', height: '16px', border: '2px solid var(--accent-cyan)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', marginRight: '8px', verticalAlign: 'middle' }}></span>
+                Loading more routes...
+              </div>
+            )}
+          </>
         ) : (
           <div className="glass-card" style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <p>No active arbitrage opportunities match your current filters and capital constraints.</p>
